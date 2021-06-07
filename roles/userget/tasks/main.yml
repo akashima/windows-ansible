@@ -1,0 +1,6 @@
+---
+  - name: Get DisplayName
+    win_shell: |
+      Get-ADUser -Filter { mail -eq "{{ item.email }}" } -Properties DistinguishedName,mail,Description | sort Description
+    loop: "{{ users }}"
+    ignore_errors: true

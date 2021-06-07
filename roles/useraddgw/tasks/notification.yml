@@ -1,0 +1,12 @@
+---
+  - name: DirsyncComplete Notification
+    community.general.slack:
+      token: ''
+      msg: 'Exec Directory Sync ( to AD Server )'
+      channel: '#'
+      color: good
+      username: 'Ansible'
+      icon_url: ''
+      parse: 'none'
+    delegate_to: localhost
+    delegate_facts: false

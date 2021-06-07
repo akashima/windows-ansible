@@ -1,0 +1,83 @@
+---
+  - name: Browsing Access & Input Authorization code
+    pause:
+      prompt: "\nPlease Access URL and login.\n\nhttps://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={{ CLIENT_ID }}&redirect_uri={{ REDIRECT_URI }}&scope={{ SCOPE }}&access_type=offline\n\nPlease paste Authorization Code in ths here"
+    register: AUTHORIZATION_CODE
+  - name: Get AccessToken
+    uri:
+      method: POST
+      url: https://www.googleapis.com/oauth2/v4/token
+      body:
+        code: "{{ AUTHORIZATION_CODE.user_input }}"
+        client_id: "{{ CLIENT_ID }}"
+        client_secret: "{{ CLIENT_SECRET }}"
+        redirect_uri: "{{ REDIRECT_URI }}"
+        grant_type: authorization_code
+        access_type: offline
+      body_format: json
+      return_content: yes
+    register: GET_ACCESS_TOKEN
+  - name: Save AccessToken 
+    shell: |
+      echo {{ GET_ACCESS_TOKEN.json.access_token }}
+    register: ACCESS_TOKEN
+  - name: Create User
+    uri:
+      method: POST
+      url: "https://www.googleapis.com/admin/directory/v1/users"
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ ACCESS_TOKEN.stdout }}"
+      body:
+        primaryEmail: "{{ item.userid }}@{{ item.domainname }}"
+        name:
+          givenName: "{{ item.lastname_eng }}"
+          familyName: "{{ item.firstname_eng }}"
+        password: "{{ item.password }}"
+        changePasswordAtNextLogin: false
+        orgUnitPath: "{{ item.orgunit }}"
+      body_format: json
+      return_content: yes
+    loop: "{{ users }}"
+  - name: Generate verificationCodes
+    uri:
+      method: POST
+      url: "https://admin.googleapis.com/admin/directory/v1/users/{{ item.userid }}%40{{ item.domainname }}/verificationCodes/generate"
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ ACCESS_TOKEN.stdout }}"
+      body_format: json
+      body: ""
+      return_content: no
+      status_code: 204
+    loop: "{{ users }}"
+  - name: Get verificationCodes
+    uri:
+      method: GET
+      url: "https://admin.googleapis.com/admin/directory/v1/users/{{ item.userid }}%40{{ item.domainname }}/verificationCodes"
+      headers:
+        Content-Type: application/json
+        Authorization: "Bearer {{ ACCESS_TOKEN.stdout }}"
+      body_format: json
+      body: ""
+      return_content: yes
+    loop: "{{ users }}"
+    register: GET_VERIFICATION_CODE
+  - name: Verification Code List
+    copy:
+      dest: "{{ item.item.userid }}@{{ item.item.domainname }}.txt"
+      content: "{{item.json | json_query('items[*].verificationCode')}}"
+    loop: "{{ GET_VERIFICATION_CODE.results }}"
+  - name: Create Userinfo in Google Drive
+    shell: |
+      curl -sS -X POST \
+         -H "Authorization: Bearer {{ ACCESS_TOKEN.stdout }}" \
+         -F "metadata={name: '{{ item.item.userid }}@{{ item.item.domainname }}.txt', mimeType: 'plain/text', parents: ['{{ PARENTS }}']};type=application/json;charset=UTF-8" \
+         -F "file=@{{ item.item.userid }}@{{ item.item.domainname }}.txt;type=plain/text" \
+         "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true"
+    loop: "{{ GET_VERIFICATION_CODE.results }}"
+  - name: DeleteBackupCode
+    file:
+      path: "{{ item.item.userid }}@{{ item.item.domainname }}.txt"
+      state: absent
+    loop: "{{ GET_VERIFICATION_CODE.results }}"

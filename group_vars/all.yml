@@ -1,0 +1,35 @@
+dirsync: true
+users:
+  - userid: ""
+    password: ""
+    domainname: ""
+    email: ""
+    firstname: ""
+    firstname_eng: ""
+    lastname: ""
+    lastname_eng: ""
+    description: 
+    groups: [""]
+    orgunit: ""
+  - userid: ""
+    password: ""
+    domainname: ""
+    email: ""
+    firstname: ""
+    firstname_eng: ""
+    lastname: ""
+    lastname_eng: ""
+    description:
+    groups: [""]
+    orgunit: ""
+  - userid: ""
+    password: ""
+    domainname: ""
+    email: ""
+    firstname: ""
+    firstname_eng: ""
+    lastname: ""
+    lastname_eng: ""
+    description: ""
+    groups: ["","",""]
+    orgunit: ""

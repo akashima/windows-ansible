@@ -1,0 +1,5 @@
+CLIENT_ID: 
+CLIENT_SECRET: 
+REDIRECT_URI: urn:ietf:wg:oauth:2.0:oob
+SCOPE: https://www.googleapis.com/auth/admin.directory.user%20https://www.googleapis.com/auth/admin.directory.user.security%20https://www.googleapis.com/auth/drive%20https://www.googleapis.com/auth/drive.file%20https://www.googleapis.com/auth/drive.appdata
+PARENTS: 

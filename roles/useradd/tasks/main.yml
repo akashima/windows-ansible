@@ -1,0 +1,22 @@
+---
+  - name: Add AD User
+    win_domain_user:
+      password: "{{ item.password }}"
+      upn: "{{ item.userid }}@{{ item.domainname }}"
+      email: "{{ item.email }}"
+      name: "{{ item.lastname }}　{{ item.firstname }}"
+      firstname: "{{ item.firstname }}"
+      surname: "{{ item.lastname }}"
+      description: "{{ item.description }}"
+      password_expired: yes
+      groups: "{{ item.groups }}"
+      state: present
+    loop: "{{ users }}"
+    ignore_errors: true
+  - name: Set DisplayName
+    win_shell: |
+      Get-ADUser -Identity "{{ item.userid }}" | Set-ADUser -DisplayName "{{ item.lastname }}　{{ item.firstname }}"
+    loop: "{{ users }}"
+  - name: Exec Directory Sync
+    win_shell: .\DirectorySyncClientCmd.exe chdir='C:\Program Files\Microsoft Azure AD Sync\Bin'
+    when: dirsync
